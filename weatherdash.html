@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .weather-card {
+            transition: all 0.3s ease;
+            transform: scale(1);
+        }
+        
+        .weather-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .temperature-display {
+            font-size: 4rem;
+            font-weight: 300;
+            line-height: 1;
+        }
+        
+        .weather-bg {
+            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .search-dropdown {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        /* Custom scrollbar */
+        .search-dropdown::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .search-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .search-dropdown::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        .search-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-cloud-sun text-blue-500 mr-2"></i>
+                Weather Dashboard
+            </h1>
+            
+            <!-- Search Bar -->
+            <div class="relative w-full md:w-96">
+                <div class="relative">
+                    <input type="text" id="location-search" placeholder="Search for a city..." 
+                           class="w-full py-3 px-4 pr-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm">
+                    <button id="search-btn" class="absolute right-3 top-3 text-gray-500 hover:text-blue-600">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                
+                <!-- Search Dropdown -->
+                <div id="search-results" class="search-dropdown hidden absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button id="unit-toggle" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-full font-medium hover:bg-blue-200 transition">
+                    <span id="unit-text">°C</span> / <span id="alt-unit-text">°F</span>
+                </button>
+                <button id="refresh-btn" class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
+                    <i class="fas fa-sync-alt text-gray-600"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Current Weather -->
+        <div id="current-weather" class="weather-card weather-bg text-white rounded-2xl p-6 mb-8 shadow-xl animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center">
+                        <h2 id="current-location" class="text-2xl font-bold">New York, US</h2>
+                        <button id="location-favorite" class="ml-2 text-yellow-300 hover:text-yellow-400">
+                            <i class="far fa-star"></i>
+                        </button>
+                    </div>
+                    <p id="current-date" class="text-blue-100">Monday, June 12, 2023</p>
+                    <p id="current-condition" class="text-xl mt-2">Partly Cloudy</p>
+                </div>
+                
+                <div class="flex items-center">
+                    <div class="text-center mr-6">
+                        <div class="temperature-display">
+                            <span id="current-temp">24</span><span id="temp-unit">°C</span>
+                        </div>
+                        <div class="flex justify-center space-x-4 mt-2">
+                            <div>
+                                <p class="text-blue-100">High</p>
+                                <p><span id="high-temp">28</span><span class="temp-unit">°C</span></p>
+                            </div>
+                            <div>
+                                <p class="text-blue-100">Low</p>
+                                <p><span id="low-temp">18</span><span class="temp-unit">°C</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="current-icon" class="w-24 h-24 flex items-center justify-center">
+                        <i class="fas fa-cloud-sun text-6xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-blue-400">
+                <div class="text-center">
+                    <p class="text-blue-100">Humidity</p>
+                    <p class="text-xl font-medium"><i class="fas fa-tint mr-2"></i> <span id="humidity">65</span>%</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-blue-100">Wind</p>
+                    <p class="text-xl font-medium"><i class="fas fa-wind mr-2"></i> <span id="wind-speed">12</span> <span class="wind-unit">km/h</span></p>
+                </div>
+                <div class="text-center">
+                    <p class="text-blue-100">Pressure</p>
+                    <p class="text-xl font-medium"><i class="fas fa-tachometer-alt mr-2"></i> <span id="pressure">1012</span> hPa</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-blue-100">UV Index</p>
+                    <p class="text-xl font-medium"><i class="fas fa-sun mr-2"></i> <span id="uv-index">5</span> (Moderate)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hourly Forecast -->
+        <div class="bg-white rounded-2xl p-6 mb-8 shadow animate-fade-in" style="animation-delay: 0.2s">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Hourly Forecast</h3>
+            <div class="overflow-x-auto">
+                <div id="hourly-forecast" class="flex space-x-4 pb-2">
+                    <!-- Hours will be added here by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Daily Forecast -->
+        <div class="bg-white rounded-2xl p-6 mb-8 shadow animate-fade-in" style="animation-delay: 0.4s">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">7-Day Forecast</h3>
+            <div id="daily-forecast" class="space-y-3">
+                <!-- Days will be added here by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Weather Maps -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in" style="animation-delay: 0.6s">
+            <div class="bg-white rounded-2xl p-6 shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Temperature Map</h3>
+                    <button class="text-blue-500 hover:text-blue-700">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+                <div class="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
+                    <p class="text-gray-500">Temperature map visualization</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Precipitation Map</h3>
+                    <button class="text-blue-500 hover:text-blue-700">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+                <div class="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
+                    <p class="text-gray-500">Precipitation map visualization</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Favorites Section -->
+        <div id="favorites-section" class="bg-white rounded-2xl p-6 mt-8 shadow animate-fade-in" style="animation-delay: 0.8s">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Favorite Locations</h3>
+                <button id="edit-favorites" class="text-blue-500 hover:text-blue-700">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+            </div>
+            <div id="favorites-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-blue-50 rounded-lg p-4 flex items-center justify-between hover:bg-blue-100 cursor-pointer transition">
+                    <div>
+                        <h4 class="font-medium">New York</h4>
+                        <p class="text-sm text-gray-600">24°C <i class="fas fa-cloud-sun ml-1"></i></p>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-600">
+                        <i class="fas fa-star"></i>
+                    </button>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4 flex items-center justify-between hover:bg-blue-100 cursor-pointer transition">
+                    <div>
+                        <h4 class="font-medium">London</h4>
+                        <p class="text-sm text-gray-600">18°C <i class="fas fa-cloud-rain ml-1"></i></p>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-600">
+                        <i class="fas fa-star"></i>
+                    </button>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4 flex items-center justify-between hover:bg-blue-100 cursor-pointer transition">
+                    <div>
+                        <h4 class="font-medium">Tokyo</h4>
+                        <p class="text-sm text-gray-600">28°C <i class="fas fa-sun ml-1"></i></p>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-600">
+                        <i class="fas fa-star"></i>
+                    </button>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4 flex items-center justify-between hover:bg-blue-100 cursor-pointer transition">
+                    <div>
+                        <h4 class="font-medium">Sydney</h4>
+                        <p class="text-sm text-gray-600">15°C <i class="fas fa-cloud ml-1"></i></p>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-600">
+                        <i class="fas fa-star"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Weather data (simulated - in a real app, you'd fetch this from an API)
+        const weatherData = {
+            location: "New York, US",
+            date: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+            condition: "Partly Cloudy",
+            temp: 24,
+            high: 28,
+            low: 18,
+            humidity: 65,
+            windSpeed: 12,
+            pressure: 1012,
+            uvIndex: 5,
+            icon: "cloud-sun",
+            
+            hourly: [
+                { time: "Now", temp: 24, icon: "cloud-sun" },
+                { time: "1 PM", temp: 25, icon: "sun" },
+                { time: "2 PM", temp: 26, icon: "sun" },
+                { time: "3 PM", temp: 27, icon: "sun" },
+                { time: "4 PM", temp: 27, icon: "sun" },
+                { time: "5 PM", temp: 26, icon: "sun" },
+                { time: "6 PM", temp: 25, icon: "cloud-sun" },
+                { time: "7 PM", temp: 23, icon: "cloud-moon" },
+                { time: "8 PM", temp: 22, icon: "cloud-moon" },
+                { time: "9 PM", temp: 21, icon: "moon" },
+                { time: "10 PM", temp: 20, icon: "moon" },
+                { time: "11 PM", temp: 19, icon: "moon" },
+            ],
+            
+            daily: [
+                { day: "Today", high: 28, low: 18, icon: "cloud-sun", pop: 10 },
+                { day: "Tue", high: 30, low: 20, icon: "sun", pop: 0 },
+                { day: "Wed", high: 29, low: 21, icon: "sun", pop: 0 },
+                { day: "Thu", high: 27, low: 20, icon: "cloud-sun", pop: 20 },
+                { day: "Fri", high: 25, low: 19, icon: "cloud-rain", pop: 60 },
+                { day: "Sat", high: 23, low: 17, icon: "cloud-showers-heavy", pop: 80 },
+                { day: "Sun", high: 24, low: 16, icon: "cloud-sun", pop: 30 },
+            ],
+            
+            favorites: [
+                { name: "New York", temp: 24, icon: "cloud-sun" },
+                { name: "London", temp: 18, icon: "cloud-rain" },
+                { name: "Tokyo", temp: 28, icon: "sun" },
+                { name: "Sydney", temp: 15, icon: "cloud" },
+            ]
+        };
+
+        // DOM Elements
+        const currentLocation = document.getElementById('current-location');
+        const currentDate = document.getElementById('current-date');
+        const currentCondition = document.getElementById('current-condition');
+        const currentTemp = document.getElementById('current-temp');
+        const highTemp = document.getElementById('high-temp');
+        const lowTemp = document.getElementById('low-temp');
+        const humidity = document.getElementById('humidity');
+        const windSpeed = document.getElementById('wind-speed');
+        const pressure = document.getElementById('pressure');
+        const uvIndex = document.getElementById('uv-index');
+        const currentIcon = document.getElementById('current-icon');
+        const hourlyForecast = document.getElementById('hourly-forecast');
+        const dailyForecast = document.getElementById('daily-forecast');
+        const unitToggle = document.getElementById('unit-toggle');
+        const unitText = document.getElementById('unit-text');
+        const altUnitText = document.getElementById('alt-unit-text');
+        const tempUnit = document.getElementById('temp-unit');
+        const windUnit = document.querySelector('.wind-unit');
+        const locationSearch = document.getElementById('location-search');
+        const searchResults = document.getElementById('search-results');
+        const searchBtn = document.getElementById('search-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const locationFavorite = document.getElementById('location-favorite');
+        const favoritesList = document.getElementById('favorites-list');
+        const editFavorites = document.getElementById('edit-favorites');
+        
+        // State
+        let isCelsius = true;
+        let isEditingFavorites = false;
+        
+        // Initialize the dashboard
+        function initDashboard() {
+            updateCurrentWeather();
+            updateHourlyForecast();
+            updateDailyForecast();
+            updateFavoritesList();
+            
+            // Set up event listeners
+            unitToggle.addEventListener('click', toggleTemperatureUnit);
+            refreshBtn.addEventListener('click', refreshWeather);
+            locationFavorite.addEventListener('click', toggleFavorite);
+            editFavorites.addEventListener('click', toggleEditFavorites);
+            locationSearch.addEventListener('input', handleSearchInput);
+            searchBtn.addEventListener('click', handleSearch);
+            
+            // Close search dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!locationSearch.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Update current weather display
+        function updateCurrentWeather() {
+            currentLocation.textContent = weatherData.location;
+            currentDate.textContent = weatherData.date;
+            currentCondition.textContent = weatherData.condition;
+            currentTemp.textContent = weatherData.temp;
+            highTemp.textContent = weatherData.high;
+            lowTemp.textContent = weatherData.low;
+            humidity.textContent = weatherData.humidity;
+            windSpeed.textContent = weatherData.windSpeed;
+            pressure.textContent = weatherData.pressure;
+            uvIndex.textContent = weatherData.uvIndex;
+            
+            // Update icon
+            currentIcon.innerHTML = `<i class="fas fa-${weatherData.icon} text-6xl"></i>`;
+            
+            // Check if current location is favorited
+            const locationName = weatherData.location.split(',')[0].trim();
+            const isFavorited = weatherData.favorites.some(fav => fav.name === locationName);
+            locationFavorite.innerHTML = isFavorited 
+                ? '<i class="fas fa-star"></i>' 
+                : '<i class="far fa-star"></i>';
+        }
+        
+        // Update hourly forecast
+        function updateHourlyForecast() {
+            hourlyForecast.innerHTML = '';
+            
+            weatherData.hourly.forEach(hour => {
+                const hourElement = document.createElement('div');
+                hourElement.className = 'flex-shrink-0 bg-blue-50 rounded-lg p-3 text-center w-20';
+                hourElement.innerHTML = `
+                    <p class="font-medium">${hour.time}</p>
+                    <div class="my-2">
+                        <i class="fas fa-${hour.icon} text-blue-500 text-xl"></i>
+                    </div>
+                    <p class="font-bold">${hour.temp}°</p>
+                `;
+                hourlyForecast.appendChild(hourElement);
+            });
+        }
+        
+        // Update daily forecast
+        function updateDailyForecast() {
+            dailyForecast.innerHTML = '';
+            
+            weatherData.daily.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg';
+                dayElement.innerHTML = `
+                    <div class="w-24 font-medium">${day.day}</div>
+                    <div class="flex items-center">
+                        <i class="fas fa-${day.icon} text-blue-500 mr-3"></i>
+                        ${day.pop > 0 ? `<span class="text-blue-500 text-sm mr-3">${day.pop}%</span>` : ''}
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="font-medium">${day.high}°</span>
+                        <span class="text-gray-400">${day.low}°</span>
+                    </div>
+                `;
+                dailyForecast.appendChild(dayElement);
+            });
+        }
+        
+        // Update favorites list
+        function updateFavoritesList() {
+            favoritesList.innerHTML = '';
+            
+            weatherData.favorites.forEach(fav => {
+                const favElement = document.createElement('div');
+                favElement.className = 'bg-blue-50 rounded-lg p-4 flex items-center justify-between hover:bg-blue-100 cursor-pointer transition';
+                
+                if (isEditingFavorites) {
+                    favElement.innerHTML = `
+                        <div>
+                            <h4 class="font-medium">${fav.name}</h4>
+                            <p class="text-sm text-gray-600">${fav.temp}°C <i class="fas fa-${fav.icon} ml-1"></i></p>
+                        </div>
+                        <button class="text-red-500 hover:text-red-600 remove-favorite" data-location="${fav.name}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                } else {
+                    favElement.innerHTML = `
+                        <div>
+                            <h4 class="font-medium">${fav.name}</h4>
+                            <p class="text-sm text-gray-600">${fav.temp}°C <i class="fas fa-${fav.icon} ml-1"></i></p>
+                        </div>
+                        <button class="text-yellow-500 hover:text-yellow-600">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    `;
+                }
+                
+                favoritesList.appendChild(favElement);
+            });
+            
+            // Add event listeners to remove buttons if in edit mode
+            if (isEditingFavorites) {
+                document.querySelectorAll('.remove-favorite').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const location = btn.getAttribute('data-location');
+                        removeFavorite(location);
+                    });
+                });
+            }
+        }
+        
+        // Toggle temperature unit between Celsius and Fahrenheit
+        function toggleTemperatureUnit() {
+            isCelsius = !isCelsius;
+            
+            if (isCelsius) {
+                unitText.textContent = '°C';
+                altUnitText.textContent = '°F';
+                tempUnit.textContent = '°C';
+                windUnit.textContent = 'km/h';
+                
+                // Convert temperatures back to Celsius (simplified)
+                currentTemp.textContent = weatherData.temp;
+                highTemp.textContent = weatherData.high;
+                lowTemp.textContent = weatherData.low;
+                
+                // Update hourly forecast temps
+                weatherData.hourly.forEach((hour, i) => {
+                    const originalTemp = hour.temp;
+                    hourlyForecast.children[i].querySelector('p:last-child').textContent = `${originalTemp}°`;
+                });
+                
+                // Update daily forecast temps
+                weatherData.daily.forEach((day, i) => {
+                    const originalHigh = day.high;
+                    const originalLow = day.low;
+                    const tempElements = dailyForecast.children[i].querySelectorAll('span');
+                    tempElements[0].textContent = `${originalHigh}°`;
+                    tempElements[1].textContent = `${originalLow}°`;
+                });
+                
+                // Update favorites temps
+                weatherData.favorites.forEach((fav, i) => {
+                    const originalTemp = fav.temp;
+                    favoritesList.children[i].querySelector('p').innerHTML = `${originalTemp}°C <i class="fas fa-${fav.icon} ml-1"></i>`;
+                });
+            } else {
+                unitText.textContent = '°F';
+                altUnitText.textContent = '°C';
+                tempUnit.textContent = '°F';
+                windUnit.textContent = 'mph';
+                
+                // Convert temperatures to Fahrenheit (simplified)
+                currentTemp.textContent = Math.round(weatherData.temp * 9/5 + 32);
+                highTemp.textContent = Math.round(weatherData.high * 9/5 + 32);
+                lowTemp.textContent = Math.round(weatherData.low * 9/5 + 32);
+                
+                // Update hourly forecast temps
+                weatherData.hourly.forEach((hour, i) => {
+                    const fahrenheitTemp = Math.round(hour.temp * 9/5 + 32);
+                    hourlyForecast.children[i].querySelector('p:last-child').textContent = `${fahrenheitTemp}°`;
+                });
+                
+                // Update daily forecast temps
+                weatherData.daily.forEach((day, i) => {
+                    const fahrenheitHigh = Math.round(day.high * 9/5 + 32);
+                    const fahrenheitLow = Math.round(day.low * 9/5 + 32);
+                    const tempElements = dailyForecast.children[i].querySelectorAll('span');
+                    tempElements[0].textContent = `${fahrenheitHigh}°`;
+                    tempElements[1].textContent = `${fahrenheitLow}°`;
+                });
+                
+                // Update favorites temps
+                weatherData.favorites.forEach((fav, i) => {
+                    const fahrenheitTemp = Math.round(fav.temp * 9/5 + 32);
+                    favoritesList.children[i].querySelector('p').innerHTML = `${fahrenheitTemp}°F <i class="fas fa-${fav.icon} ml-1"></i>`;
+                });
+            }
+        }
+        
+        // Refresh weather data
+        function refreshWeather() {
+            // Simulate refresh by rotating the icon
+            refreshBtn.querySelector('i').classList.add('animate-spin');
+            
+            // In a real app, you would fetch fresh data here
+            setTimeout(() => {
+                refreshBtn.querySelector('i').classList.remove('animate-spin');
+                
+                // Show a notification
+                const notification = document.createElement('div');
+                notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
+                notification.textContent = 'Weather data updated!';
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }, 1000);
+        }
+        
+        // Toggle favorite status for current location
+        function toggleFavorite() {
+            const locationName = weatherData.location.split(',')[0].trim();
+            const isFavorited = weatherData.favorites.some(fav => fav.name === locationName);
+            
+            if (isFavorited) {
+                removeFavorite(locationName);
+            } else {
+                addFavorite(locationName);
+            }
+        }
+        
+        // Add current location to favorites
+        function addFavorite(locationName) {
+            // Check if already favorited
+            if (weatherData.favorites.some(fav => fav.name === locationName)) return;
+            
+            // Add to favorites
+            weatherData.favorites.push({
+                name: locationName,
+                temp: weatherData.temp,
+                icon: weatherData.icon
+            });
+            
+            // Update UI
+            locationFavorite.innerHTML = '<i class="fas fa-star"></i>';
+            updateFavoritesList();
+        }
+        
+        // Remove location from favorites
+        function removeFavorite(locationName) {
+            weatherData.favorites = weatherData.favorites.filter(fav => fav.name !== locationName);
+            
+            // If removing the current location, update the favorite button
+            if (weatherData.location.split(',')[0].trim() === locationName) {
+                locationFavorite.innerHTML = '<i class="far fa-star"></i>';
+            }
+            
+            updateFavoritesList();
+        }
+        
+        // Toggle edit favorites mode
+        function toggleEditFavorites() {
+            isEditingFavorites = !isEditingFavorites;
+            editFavorites.innerHTML = isEditingFavorites 
+                ? '<i class="fas fa-check"></i> Done' 
+                : '<i class="fas fa-edit"></i> Edit';
+            updateFavoritesList();
+        }
+        
+        // Handle search input
+        function handleSearchInput() {
+            if (locationSearch.value.length > 2) {
+                // In a real app, you would fetch search results from an API
+                const mockResults = [
+                    "New York, US",
+                    "New York, Canada",
+                    "New Delhi, India",
+                    "New Orleans, US",
+                    "Newark, US"
+                ].filter(city => city.toLowerCase().includes(locationSearch.value.toLowerCase()));
+                
+                // Display results
+                searchResults.innerHTML = '';
+                mockResults.forEach(result => {
+                    const resultElement = document.createElement('div');
+                    resultElement.className = 'p-3 hover:bg-gray-100 cursor-pointer';
+                    resultElement.textContent = result;
+                    resultElement.addEventListener('click', () => {
+                        selectLocation(result);
+                    });
+                    searchResults.appendChild(resultElement);
+                });
+                
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResults.classList.add('hidden');
+            }
+        }
+        
+        // Handle search button click
+        function handleSearch() {
+            if (locationSearch.value.trim()) {
+                selectLocation(locationSearch.value + ', US'); // Simplified
+            }
+        }
+        
+        // Select a location from search results
+        function selectLocation(location) {
+            weatherData.location = location;
+            locationSearch.value = '';
+            searchResults.classList.add('hidden');
+            updateCurrentWeather();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Initialize the dashboard when the page loads
+        window.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlavorFinder | Discover Amazing Recipes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9f9f9;
+        }
+        
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .category-chip {
+            transition: all 0.3s ease;
+        }
+        
+        .category-chip:hover {
+            background-color: #4f46e5;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg shadow-md">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <i class="fas fa-utensils text-3xl text-indigo-600 mr-3"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">Flavor<span class="text-indigo-600">Finder</span></h1>
+                </div>
+                <div class="relative w-full md:w-1/2">
+                    <input type="text" id="searchInput" placeholder="Search for recipes (e.g. pasta, chicken, vegetarian)" 
+                           class="w-full px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm">
+                    <button id="searchBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700 transition">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Hero Section -->
+        <section class="mb-12 text-center">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">Discover Delicious Recipes</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Find the perfect recipe for any occasion. From quick weeknight dinners to impressive desserts, we've got you covered.</p>
+        </section>
+
+        <!-- Categories -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-semibold text-gray-800 mb-6">Popular Categories</h3>
+            <div class="flex flex-wrap gap-3">
+                <button class="category-chip bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md">
+                    <i class="fas fa-egg mr-2 text-yellow-500"></i> Breakfast
+                </button>
+                <button class="category-chip bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md">
+                    <i class="fas fa-hamburger mr-2 text-red-500"></i> Burgers
+                </button>
+                <button class="category-chip bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md">
+                    <i class="fas fa-leaf mr-2 text-green-500"></i> Vegan
+                </button>
+                <button class="category-chip bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md">
+                    <i class="fas fa-pizza-slice mr-2 text-orange-500"></i> Italian
+                </button>
+                <button class="category-chip bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md">
+                    <i class="fas fa-ice-cream mr-2 text-pink-500"></i> Desserts
+                </button>
+                <button class="category-chip bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md">
+                    <i class="fas fa-drumstick-bite mr-2 text-amber-700"></i> Chicken
+                </button>
+            </div>
+        </section>
+
+        <!-- Featured Recipes -->
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-semibold text-gray-800">Featured Recipes</h3>
+                <button class="text-indigo-600 hover:text-indigo-800 font-medium">View All</button>
+            </div>
+            <div id="featuredRecipes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Recipes will be loaded here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Popular This Week -->
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-semibold text-gray-800">Popular This Week</h3>
+                <button class="text-indigo-600 hover:text-indigo-800 font-medium">View All</button>
+            </div>
+            <div id="popularRecipes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Recipes will be loaded here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Newsletter -->
+        <section class="bg-indigo-50 rounded-xl p-8 mb-12">
+            <div class="max-w-3xl mx-auto text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Get Weekly Recipe Inspiration</h3>
+                <p class="text-gray-600 mb-6">Sign up for our newsletter and receive new recipes directly in your inbox every week!</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <input type="email" placeholder="Your email address" class="px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-96">
+                    <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-medium">Subscribe</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-xl font-bold mb-4">FlavorFinder</h4>
+                    <p class="text-gray-400">Discover, cook, and share amazing recipes from around the world.</p>
+                    <div class="flex gap-4 mt-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Explore</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Recipes</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Categories</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Collections</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Chefs</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Company</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Legal</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 FlavorFinder. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Recipe Modal -->
+    <div id="recipeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+                <h3 id="modalRecipeTitle" class="text-xl font-bold"></h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <img id="modalRecipeImage" src="" alt="" class="w-full h-64 object-cover rounded-lg mb-4">
+                        <div class="flex flex-wrap gap-3 mb-6">
+                            <span id="modalRecipeTime" class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm"></span>
+                            <span id="modalRecipeServings" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"></span>
+                            <span id="modalRecipeDifficulty" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm"></span>
+                        </div>
+                        <h4 class="font-semibold mb-3">Description</h4>
+                        <p id="modalRecipeDescription" class="text-gray-700 mb-6"></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-3">Ingredients</h4>
+                        <ul id="modalRecipeIngredients" class="list-disc pl-5 space-y-2 mb-6"></ul>
+                        <h4 class="font-semibold mb-3">Instructions</h4>
+                        <ol id="modalRecipeInstructions" class="list-decimal pl-5 space-y-3"></ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample recipe data
+        const recipes = [
+            {
+                id: 1,
+                title: "Creamy Garlic Pasta",
+                image: "https://images.unsplash.com/photo-1546069901-ba9590aed2c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+                time: "25 mins",
+                servings: "4 servings",
+                difficulty: "Easy",
+                category: "Italian",
+                description: "A rich and creamy garlic pasta that comes together in just 25 minutes. Perfect for a quick weeknight dinner that feels special.",
+                ingredients: [
+                    "12 oz fettuccine pasta",
+                    "4 cloves garlic, minced",
+                    "2 tbsp butter",
+                    "1 cup heavy cream",
+                    "1/2 cup grated parmesan cheese",
+                    "Salt and pepper to taste",
+                    "Fresh parsley for garnish"
+                ],
+                instructions: [
+                    "Cook pasta according to package instructions. Reserve 1/2 cup pasta water before draining.",
+                    "In a large skillet, melt butter over medium heat. Add garlic and sauté for 1 minute until fragrant.",
+                    "Pour in heavy cream and bring to a simmer. Cook for 3-4 minutes until slightly thickened.",
+                    "Stir in parmesan cheese until melted and smooth. If sauce is too thick, add reserved pasta water 1 tbsp at a time.",
+                    "Add drained pasta to the sauce and toss to coat evenly. Season with salt and pepper.",
+                    "Garnish with fresh parsley and additional parmesan before serving."
+                ]
+            },
+            {
+                id: 2,
+                title: "Avocado Toast with Egg",
+                image: "https://images.unsplash.com/photo-1525351326368-efbb5cb6814d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+                time: "10 mins",
+                servings: "2 servings",
+                difficulty: "Easy",
+                category: "Breakfast",
+                description: "A simple yet satisfying breakfast with creamy avocado and perfectly cooked eggs on toasted sourdough bread.",
+                ingredients: [
+                    "2 slices sourdough bread",
+                    "1 ripe avocado",
+                    "2 eggs",
+                    "1 tbsp olive oil",
+                    "Salt and pepper to taste",
+                    "Red pepper flakes (optional)",
+                    "Fresh cilantro or microgreens for garnish"
+                ],
+                instructions: [
+                    "Toast the bread until golden and crisp.",
+                    "Cut the avocado in half, remove the pit, and scoop the flesh into a bowl. Mash with a fork and season with salt and pepper.",
+                    "Heat olive oil in a non-stick pan over medium heat. Crack eggs into the pan and cook to your preferred doneness (sunny side up or over easy works well).",
+                    "Spread mashed avocado evenly on the toast. Top with the cooked egg.",
+                    "Season with additional salt, pepper, and red pepper flakes if desired. Garnish with fresh herbs."
+                ]
+            },
+            {
+                id: 3,
+                title: "Chocolate Chip Cookies",
+                image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+                time: "35 mins",
+                servings: "24 cookies",
+                difficulty: "Medium",
+                category: "Desserts",
+                description: "Classic chocolate chip cookies with crisp edges and chewy centers. These never fail to impress!",
+                ingredients: [
+                    "2 1/4 cups all-purpose flour",
+                    "1 tsp baking soda",
+                    "1 tsp salt",
+                    "1 cup (2 sticks) butter, softened",
+                    "3/4 cup granulated sugar",
+                    "3/4 cup packed brown sugar",
+                    "1 tsp vanilla extract",
+                    "2 large eggs",
+                    "2 cups semi-sweet chocolate chips"
+                ],
+                instructions: [
+                    "Preheat oven to 375°F (190°C). Line baking sheets with parchment paper.",
+                    "In a small bowl, whisk together flour, baking soda, and salt.",
+                    "In a large bowl, beat butter, granulated sugar, brown sugar, and vanilla until creamy.",
+                    "Add eggs one at a time, beating well after each addition.",
+                    "Gradually beat in flour mixture. Stir in chocolate chips.",
+                    "Drop by rounded tablespoon onto ungreased baking sheets.",
+                    "Bake for 9 to 11 minutes or until golden brown. Cool on baking sheets for 2 minutes; remove to wire racks to cool completely."
+                ]
+            },
+            {
+                id: 4,
+                title: "Grilled Chicken Salad",
+                image: "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+                time: "30 mins",
+                servings: "2 servings",
+                difficulty: "Easy",
+                category: "Healthy",
+                description: "A fresh and flavorful salad with perfectly grilled chicken, crisp vegetables, and a tangy vinaigrette.",
+                ingredients: [
+                    "2 boneless, skinless chicken breasts",
+                    "1 tbsp olive oil",
+                    "1 tsp paprika",
+                    "Salt and pepper to taste",
+                    "6 cups mixed greens",
+                    "1 cup cherry tomatoes, halved",
+                    "1 cucumber, sliced",
+                    "1/4 red onion, thinly sliced",
+                    "1/2 avocado, sliced",
+                    "1/4 cup feta cheese, crumbled",
+                    "2 tbsp balsamic vinaigrette"
+                ],
+                instructions: [
+                    "Preheat grill or grill pan to medium-high heat.",
+                    "Rub chicken breasts with olive oil and season with paprika, salt, and pepper.",
+                    "Grill chicken for 6-7 minutes per side or until internal temperature reaches 165°F. Let rest for 5 minutes before slicing.",
+                    "In a large bowl, combine mixed greens, tomatoes, cucumber, red onion, and avocado.",
+                    "Top with sliced grilled chicken and crumbled feta cheese.",
+                    "Drizzle with balsamic vinaigrette and toss gently before serving."
+                ]
+            },
+            {
+                id: 5,
+                title: "Beef Tacos",
+                image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+                time: "20 mins",
+                servings: "4 servings",
+                difficulty: "Easy",
+                category: "Mexican",
+                description: "Flavorful ground beef tacos with all the fixings - a family favorite that's ready in 20 minutes!",
+                ingredients: [
+                    "1 lb ground beef",
+                    "1 packet taco seasoning",
+                    "1/2 cup water",
+                    "8 taco shells or small tortillas",
+                    "1 cup shredded lettuce",
+                    "1 cup diced tomatoes",
+                    "1/2 cup shredded cheddar cheese",
+                    "1/4 cup sour cream",
+                    "1/4 cup salsa",
+                    "1 avocado, diced",
+                    "Fresh cilantro for garnish"
+                ],
+                instructions: [
+                    "Brown ground beef in a large skillet over medium-high heat, breaking it up as it cooks.",
+                    "Drain excess fat, then add taco seasoning and water. Simmer for 5 minutes until thickened.",
+                    "Meanwhile, warm taco shells according to package directions.",
+                    "Assemble tacos by filling shells with seasoned beef, then topping with lettuce, tomatoes, cheese, sour cream, salsa, avocado, and cilantro.",
+                    "Serve immediately with lime wedges if desired."
+                ]
+            },
+            {
+                id: 6,
+                title: "Vegetable Stir Fry",
+                image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+                time: "15 mins",
+                servings: "4 servings",
+                difficulty: "Easy",
+                category: "Vegetarian",
+                description: "A quick and healthy vegetable stir fry with a delicious savory sauce. Perfect for meatless Mondays!",
+                ingredients: [
+                    "2 tbsp vegetable oil",
+                    "3 cloves garlic, minced",
+                    "1 tbsp ginger, grated",
+                    "1 bell pepper, sliced",
+                    "1 cup broccoli florets",
+                    "1 carrot, julienned",
+                    "1 cup snap peas",
+                    "1 cup mushrooms, sliced",
+                    "2 tbsp soy sauce",
+                    "1 tbsp oyster sauce",
+                    "1 tsp sesame oil",
+                    "1 tsp cornstarch mixed with 2 tbsp water",
+                    "Sesame seeds for garnish"
+                ],
+                instructions: [
+                    "Heat oil in a wok or large skillet over high heat.",
+                    "Add garlic and ginger, stir for 30 seconds until fragrant.",
+                    "Add vegetables starting with the ones that take longest to cook (carrots, broccoli) and ending with quick-cooking ones (snap peas, mushrooms). Stir fry for 4-5 minutes until crisp-tender.",
+                    "Add soy sauce, oyster sauce, and sesame oil. Toss to combine.",
+                    "Add cornstarch slurry and cook for 1 minute until sauce thickens.",
+                    "Garnish with sesame seeds and serve over rice if desired."
+                ]
+            }
+        ];
+
+        // Display featured recipes
+        function displayFeaturedRecipes() {
+            const featuredContainer = document.getElementById('featuredRecipes');
+            const featuredRecipes = recipes.slice(0, 3); // Get first 3 recipes
+            
+            featuredRecipes.forEach(recipe => {
+                featuredContainer.innerHTML += `
+                    <div class="recipe-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300">
+                        <img src="${recipe.image}" alt="${recipe.title}" class="w-full h-48 object-cover">
+                        <div class="p-5">
+                            <h4 class="font-bold text-lg mb-2">${recipe.title}</h4>
+                            <div class="flex items-center text-sm text-gray-600 mb-3">
+                                <span class="mr-3"><i class="far fa-clock mr-1"></i> ${recipe.time}</span>
+                                <span><i class="fas fa-utensils mr-1"></i> ${recipe.servings}</span>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4 line-clamp-2">${recipe.description}</p>
+                            <button onclick="showRecipeModal(${recipe.id})" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+                                View Recipe
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Display popular recipes
+        function displayPopularRecipes() {
+            const popularContainer = document.getElementById('popularRecipes');
+            const popularRecipes = recipes.slice(3, 6); // Get next 3 recipes
+            
+            popularRecipes.forEach(recipe => {
+                popularContainer.innerHTML += `
+                    <div class="recipe-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300">
+                        <img src="${recipe.image}" alt="${recipe.title}" class="w-full h-48 object-cover">
+                        <div class="p-5">
+                            <h4 class="font-bold text-lg mb-2">${recipe.title}</h4>
+                            <div class="flex items-center text-sm text-gray-600 mb-3">
+                                <span class="mr-3"><i class="far fa-clock mr-1"></i> ${recipe.time}</span>
+                                <span><i class="fas fa-utensils mr-1"></i> ${recipe.servings}</span>
+                            </div>
+                            <p class="text-gray-700 text-sm mb-4 line-clamp-2">${recipe.description}</p>
+                            <button onclick="showRecipeModal(${recipe.id})" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+                                View Recipe
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Show recipe modal
+        function showRecipeModal(recipeId) {
+            const recipe = recipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+            
+            document.getElementById('modalRecipeTitle').textContent = recipe.title;
+            document.getElementById('modalRecipeImage').src = recipe.image;
+            document.getElementById('modalRecipeImage').alt = recipe.title;
+            document.getElementById('modalRecipeTime').textContent = `⏱ ${recipe.time}`;
+            document.getElementById('modalRecipeServings').textContent = `🍽 ${recipe.servings}`;
+            document.getElementById('modalRecipeDifficulty').textContent = `⚡ ${recipe.difficulty}`;
+            document.getElementById('modalRecipeDescription').textContent = recipe.description;
+            
+            const ingredientsList = document.getElementById('modalRecipeIngredients');
+            ingredientsList.innerHTML = '';
+            recipe.ingredients.forEach(ingredient => {
+                ingredientsList.innerHTML += `<li>${ingredient}</li>`;
+            });
+            
+            const instructionsList = document.getElementById('modalRecipeInstructions');
+            instructionsList.innerHTML = '';
+            recipe.instructions.forEach((step, index) => {
+                instructionsList.innerHTML += `<li>${step}</li>`;
+            });
+            
+            document.getElementById('recipeModal').classList.remove('hidden');
+        }
+
+        // Close modal
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('recipeModal').classList.add('hidden');
+        });
+
+        // Search functionality
+        document.getElementById('searchBtn').addEventListener('click', searchRecipes);
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchRecipes();
+        });
+
+        function searchRecipes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (!searchTerm.trim()) return;
+            
+            // In a real app, this would be an API call
+            const results = recipes.filter(recipe => 
+                recipe.title.toLowerCase().includes(searchTerm) || 
+                recipe.description.toLowerCase().includes(searchTerm) ||
+                recipe.category.toLowerCase().includes(searchTerm)
+            );
+            
+            // Clear current content
+            document.getElementById('featuredRecipes').innerHTML = '';
+            document.getElementById('popularRecipes').innerHTML = '';
+            
+            // Display search results
+            const featuredContainer = document.getElementById('featuredRecipes');
+            if (results.length === 0) {
+                featuredContainer.innerHTML = `
+                    <div class="col-span-3 text-center py-12">
+                        <i class="fas fa-search text-4xl text-gray-400 mb-4"></i>
+                        <h4 class="text-xl font-semibold text-gray-700">No recipes found</h4>
+                        <p class="text-gray-500">Try searching for something else</p>
+                    </div>
+                `;
+            } else {
+                results.forEach(recipe => {
+                    featuredContainer.innerHTML += `
+                        <div class="recipe-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300">
+                            <img src="${recipe.image}" alt="${recipe.title}" class="w-full h-48 object-cover">
+                            <div class="p-5">
+                                <h4 class="font-bold text-lg mb-2">${recipe.title}</h4>
+                                <div class="flex items-center text-sm text-gray-600 mb-3">
+                                    <span class="mr-3"><i class="far fa-clock mr-1"></i> ${recipe.time}</span>
+                                    <span><i class="fas fa-utensils mr-1"></i> ${recipe.servings}</span>
+                                </div>
+                                <p class="text-gray-700 text-sm mb-4 line-clamp-2">${recipe.description}</p>
+                                <button onclick="showRecipeModal(${recipe.id})" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+                                    View Recipe
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            displayFeaturedRecipes();
+            displayPopularRecipes();
+        });
+    </script>
+</body>
+</html>
