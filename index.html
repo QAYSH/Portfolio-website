@@ -1304,4 +1304,55 @@
         const contactForm = document.getElementById('contactForm');
         const currentYear = document.getElementById('currentYear');
 
-     
+        // Mobile Menu Toggle
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                const isHidden = mobileMenu.classList.contains('opacity-0');
+                
+                if (isHidden) {
+                    mobileMenu.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                    mobileMenu.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+                    mobileMenu.style.transform = 'translateY(0)';
+                } else {
+                    mobileMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                    mobileMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                    mobileMenu.style.transform = 'translateY(-8px)';
+                }
+            });
+
+            // Close mobile menu when clicking on a link
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+                    mobileMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                    mobileMenu.style.transform = 'translateY(-8px)';
+                });
+            });
+        }
+
+        // Dark Mode Toggle Function
+        function toggleDarkMode(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('darkMode', 'enabled');
+                if (toggleCircle) toggleCircle.style.transform = 'translateX(28px)';
+                if (mobileToggleCircle) mobileToggleCircle.style.transform = 'translateX(22px)';
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('darkMode', 'disabled');
+                if (toggleCircle) toggleCircle.style.transform = 'translateX(0)';
+                if (mobileToggleCircle) mobileToggleCircle.style.transform = 'translateX(0)';
+            }
+        }
+
+        // Initialize dark mode
+        const savedMode = localStorage.getItem('darkMode');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialDarkMode = savedMode === 'enabled' || (!savedMode && prefersDark);
+        
+        if (initialDarkMode) {
+            toggleDarkMode(true);
+        } else {
+            toggleDarkMode(false);
+        }
+
