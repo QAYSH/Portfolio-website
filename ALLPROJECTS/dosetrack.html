@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MediTrack — Drug Reminder</title>
+  <meta name="description" content="MediTrack — Drug reminder web app with smooth animations and dark mode." />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Confetti.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    /* Custom animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+    .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
+    .staggered > * { animation: fadeIn 0.5s ease-out forwards; }
+    .staggered > *:nth-child(1) { animation-delay: 0.1s; }
+    .staggered > *:nth-child(2) { animation-delay: 0.2s; }
+    .staggered > *:nth-child(3) { animation-delay: 0.3s; }
+    /* Theme-specific styles */
+    [data-theme="light"] {
+      --bg: #f7fbff;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --border: #e6eef7;
+    }
+    [data-theme="dark"] {
+      --bg: #1f2937;
+      --card: #374151;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --success: #34d399;
+      --danger: #f87171;
+      --border: #4b5563;
+    }
+    html, body { background: linear-gradient(180deg, var(--bg), var(--bg)); color: var(--text); }
+  </style>
+</head>
+<body class="min-h-screen font-sans transition-colors duration-300">
+  <div class="container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <header class="flex justify-between items-center mb-6 animate-fadeIn">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xl">M</div>
+        <div>
+          <div class="font-bold text-lg">MediTrack</div>
+          <div class="text-sm text-[var(--muted)]">Smart medication reminders</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div id="user-email" class="text-[var(--muted)] hidden sm:block"></div>
+        <button id="themeToggle" class="p-2 rounded-full hover:bg-[var(--accent)]/10 transition-all animate-slideIn" title="Toggle Theme">
+          <svg id="themeIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </button>
+        <button id="logoutBtn" class="bg-transparent border border-[var(--accent)]/20 text-[var(--accent)] px-3 py-1 rounded-lg hover:bg-[var(--accent)] hover:text-white transition-all animate-slideIn hidden">Logout</button>
+      </div>
+    </header>
+
+    <div id="topBanner" class="mb-6"><div class="bg-cyan-50 border border-cyan-200 text-cyan-800 p-3 rounded-lg text-sm animate-fadeIn">Running in local demo mode using localStorage.</div></div>
+
+    <!-- AUTH / LANDING -->
+    <main id="authScreen" class="animate-fadeIn">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[var(--card)] rounded-2xl p-6 shadow-lg">
+        <div class="p-6">
+          <h1 class="text-3xl font-bold mb-3">Never miss a dose again</h1>
+          <p class="text-[var(--muted)] mb-4">Simple medication reminders and tracking. Add prescriptions and track adherence.</p>
+          <button id="loginBtn" class="bg-[var(--accent)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent)]/80 transition-all animate-slideIn">Log In</button>
+        </div>
+        <div class="p-6 bg-[var(--card)] rounded-xl">
+          <h3 id="authTitle" class="text-xl font-semibold mb-4">Log In to MediTrack</h3>
+          <div class="mb-4">
+            <label class="text-[var(--muted)] text-sm">Email</label>
+            <input id="email" type="email" placeholder="you@example.com" class="w-full p-2 mt-1 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+          </div>
+          <div class="mb-4">
+            <label class="text-[var(--muted)] text-sm">Password</label>
+            <input id="password" type="password" placeholder="••••••••" class="w-full p-2 mt-1 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+          </div>
+          <div class="flex justify-between items-center mt-2">
+            <button id="signInBtn" class="bg-[var(--accent)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent)]/80 transition-all animate-slideIn">Log In</button>
+            <button id="switchToSignUp" class="bg-transparent border border-[var(--accent)]/20 text-[var(--accent)] px-3 py-1 rounded-lg hover:bg-[var(--accent)] hover:text-white transition-all animate-slideIn">Create Account</button>
+          </div>
+          <p id="authMsg" class="text-[var(--muted)] mt-3 text-sm"></p>
+        </div>
+      </div>
+    </main>
+
+    <!-- DASHBOARD -->
+    <main id="dashboard" class="hidden animate-fadeIn">
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <div>
+          <div class="font-bold text-xl">Good <span id="timeGreeting">day</span>, <span id="greetName">User</span></div>
+          <div class="text-[var(--muted)] text-sm">Here’s your medication plan for today</div>
+        </div>
+        <div class="flex items-center gap-4 mt-4 sm:mt-0">
+          <div class="w-32">
+            <div class="text-[var(--muted)] text-xs">Today's progress</div>
+            <div class="h-2 bg-[var(--border)] rounded-full mt-1 overflow-hidden"><span id="progressBar" class="block h-full bg-gradient-to-r from-green-400 to-cyan-500 transition-all duration-500"></span></div>
+          </div>
+          <button id="openAdd" class="bg-[var(--accent)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent)]/80 transition-all animate-slideIn">+ Add New Prescription</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section class="col-span-2 bg-[var(--card)] rounded-2xl p-6 shadow-lg">
+          <h3 class="text-lg font-semibold mb-4">Active Prescriptions</h3>
+          <div id="prescriptions" class="staggered flex flex-col gap-3"></div>
+        </section>
+        <aside class="bg-[var(--card)] rounded-2xl p-6 shadow-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold">Today's Reminders</h3>
+            <span id="reminderBadge" class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full hidden">0</span>
+          </div>
+          <div id="timeline" class="staggered flex flex-col gap-3" aria-live="polite"></div>
+        </aside>
+      </div>
+
+      <section class="mt-6 bg-[var(--card)] rounded-2xl p-6 shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+          <h4 class="text-base font-semibold">History</h4>
+          <a id="viewHistory" href="#" class="text-[var(--accent)] hover:underline animate-slideIn">View full history</a>
+        </div>
+        <div id="recentHistory" class="staggered flex flex-col gap-2"></div>
+      </section>
+    </main>
+
+    <!-- HISTORY PAGE -->
+    <main id="historyPage" class="hidden animate-fadeIn">
+      <div class="bg-[var(--card)] rounded-2xl p-6 shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">Medication History</h3>
+          <button id="backToDash" class="bg-transparent border border-[var(--accent)]/20 text-[var(--accent)] px-3 py-1 rounded-lg hover:bg-[var(--accent)] hover:text-white transition-all animate-slideIn">Back</button>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 items-center mb-4">
+          <label class="text-[var(--muted)] text-sm">Filter by drug</label>
+          <select id="filterDrug" class="p-2 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"><option value="">All</option></select>
+          <label class="text-[var(--muted)] text-sm">From</label>
+          <input id="fromDate" type="date" class="p-2 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+          <label class="text-[var(--muted)] text-sm">To</label>
+          <input id="toDate" type="date" class="p-2 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+          <button id="applyFilter" class="bg-transparent border border-[var(--accent)]/20 text-[var(--accent)] px-3 py-1 rounded-lg hover:bg-[var(--accent)] hover:text-white transition-all animate-slideIn">Apply</button>
+        </div>
+        <div class="overflow-auto max-h-96">
+          <table class="w-full">
+            <thead>
+              <tr class="text-left text-[var(--muted)]"><th class="p-2">Date</th><th class="p-2">Time</th><th class="p-2">Drug</th><th class="p-2">Status</th><th class="p-2"></th></tr>
+            </thead>
+            <tbody id="historyTable" class="staggered"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modalRoot" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4" aria-hidden="true">
+    <div class="bg-[var(--card)] rounded-2xl p-6 w-full max-w-2xl animate-slideIn" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle" class="text-lg font-semibold mb-4">Add Prescription</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="text-[var(--muted)] text-sm">Drug name</label>
+          <input id="m-drug" type="text" placeholder="e.g., Amoxicillin" class="w-full p-2 mt-1 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+        </div>
+        <div>
+          <label class="text-[var(--muted)] text-sm">Dosage</label>
+          <input id="m-dosage" type="text" placeholder="e.g., 500mg" class="w-full p-2 mt-1 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4 mt-4 items-start">
+        <div>
+          <label class="text-[var(--muted)] text-sm">Frequency</label>
+          <select id="m-freq" class="p-2 mt-1 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]">
+            <option value="once">Once/day</option>
+            <option value="twice">Twice/day</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="text-[var(--muted)] text-sm">Times</label>
+          <div id="timesContainer" class="flex flex-wrap gap-2 mt-1"></div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4 mt-4">
+        <div class="flex-1">
+          <label class="text-[var(--muted)] text-sm">Start date</label>
+          <input id="m-start" type="date" class="w-full p-2 mt-1 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+        </div>
+        <div class="flex-1">
+          <label class="text-[var(--muted)] text-sm">End date</label>
+          <input id="m-end" type="date" class="w-full p-2 mt-1 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+        </div>
+      </div>
+      <div class="mt-4">
+        <label class="text-[var(--muted)] text-sm">Notes (optional)</label>
+        <input id="m-notes" type="text" placeholder="Instructions or notes" class="w-full p-2 mt-1 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button id="closeModal" class="bg-transparent border border-[var(--accent)]/20 text-[var(--accent)] px-3 py-1 rounded-lg hover:bg-[var(--accent)] hover:text-white transition-all animate-slideIn">Cancel</button>
+        <button id="savePresc" class="bg-[var(--accent)] text-white px-4 py-2 rounded-lg hover:bg-[var(--accent)]/80 transition-all animate-slideIn">Save Prescription</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*****************************************************************
+     * DATA LAYER: localStorage implementation
+     *****************************************************************/
+    const Data = {
+      usersKey: 'meditrack_users_v1',
+      dataPrefix: 'meditrack_data_',
+      authCb: null,
+      currentUser: null,
+      async init(){
+        try {
+          if(!localStorage.getItem(this.usersKey)) localStorage.setItem(this.usersKey, JSON.stringify({}));
+        } catch(err) {
+          console.error('Failed to initialize localStorage:', err);
+          alert('Error accessing localStorage. Please check browser settings.');
+        }
+      },
+      onAuthStateChanged(cb){
+        this.authCb = cb;
+        setTimeout(() => cb(this.currentUser), 0);
+      },
+      async signUp(email, password){
+        if(!this.validateEmail(email)) throw new Error('Invalid email format.');
+        if(!password) throw new Error('Password cannot be empty.');
+        let users;
+        try {
+          users = JSON.parse(localStorage.getItem(this.usersKey) || '{}');
+        } catch(err) {
+          throw new Error('Error accessing localStorage.');
+        }
+        if(users[email]) throw new Error('Email already registered.');
+        const uid = 'local-' + Date.now() + '-' + Math.floor(Math.random() * 9999);
+        users[email] = { uid, email, password };
+        try {
+          localStorage.setItem(this.usersKey, JSON.stringify(users));
+          localStorage.setItem(this.dataPrefix + uid, JSON.stringify({ prescriptions: {} }));
+        } catch(err) {
+          throw new Error('Error saving to localStorage.');
+        }
+        this.currentUser = { uid, email };
+        if(this.authCb) this.authCb(this.currentUser);
+        return this.currentUser;
+      },
+      async signIn(email, password){
+        if(!this.validateEmail(email)) throw new Error('Invalid email format.');
+        if(!password) throw new Error('Password cannot be empty.');
+        let users;
+        try {
+          users = JSON.parse(localStorage.getItem(this.usersKey) || '{}');
+        } catch(err) {
+          throw new Error('Error accessing localStorage.');
+        }
+        const u = users[email];
+        if(!u) throw new Error('Email not found.');
+        if(u.password !== password) throw new Error('Incorrect password.');
+        this.currentUser = { uid: u.uid, email };
+        if(!localStorage.getItem(this.dataPrefix + u.uid)) {
+          try {
+            localStorage.setItem(this.dataPrefix + u.uid, JSON.stringify({ prescriptions: {} }));
+          } catch(err) {
+            throw new Error('Error initializing user data.');
+          }
+        }
+        if(this.authCb) this.authCb(this.currentUser);
+        return this.currentUser;
+      },
+      async signOut(){
+        this.currentUser = null;
+        if(this.authCb) this.authCb(null);
+      },
+      validateEmail(email){
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      },
+      _storage(uid){
+        try {
+          return JSON.parse(localStorage.getItem(this.dataPrefix + uid) || JSON.stringify({ prescriptions: {} }));
+        } catch(err) {
+          console.error('Error reading localStorage:', err);
+          return { prescriptions: {} };
+        }
+      },
+      _save(uid, obj){
+        try {
+          localStorage.setItem(this.dataPrefix + uid, JSON.stringify(obj));
+        } catch(err) {
+          console.error('Error writing to localStorage:', err);
+          throw new Error('Failed to save data.');
+        }
+      },
+      async getPrescriptions(uid){
+        const data = this._storage(uid);
+        return Object.keys(data.prescriptions).map(id => ({ id, ...data.prescriptions[id] }));
+      },
+      async addPrescription(uid, payload){
+        const db = this._storage(uid);
+        const id = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+        db.prescriptions[id] = Object.assign({}, payload, { createdAt: new Date().toISOString(), history: [] });
+        this._save(uid, db);
+        return id;
+      },
+      async updatePrescription(uid, id, payload){
+        const db = this._storage(uid);
+        if(!db.prescriptions[id]) throw new Error('Prescription not found.');
+        db.prescriptions[id] = Object.assign({}, db.prescriptions[id], payload, { updatedAt: new Date().toISOString() });
+        this._save(uid, db);
+      },
+      async deletePrescription(uid, id){
+        const db = this._storage(uid);
+        delete db.prescriptions[id];
+        this._save(uid, db);
+      },
+      async getHistoryForPrescription(uid, prescId){
+        const db = this._storage(uid);
+        const p = db.prescriptions[prescId];
+        return (p && p.history) ? p.history.slice().sort((a, b) => b.timestamp.localeCompare(a.timestamp)) : [];
+      },
+      async addHistoryEntry(uid, prescId, entry){
+        const db = this._storage(uid);
+        if(!db.prescriptions[prescId]) throw new Error('Prescription not found.');
+        const hist = db.prescriptions[prescId].history || [];
+        const rec = Object.assign({}, entry, { id: 'h_' + Date.now() + '_' + Math.floor(Math.random() * 9999), timestamp: new Date().toISOString() });
+        hist.push(rec);
+        db.prescriptions[prescId].history = hist;
+        this._save(uid, db);
+        return rec;
+      },
+      async getRecentHistory(uid, limit = 20){
+        const db = this._storage(uid);
+        const rows = [];
+        for(const [pid, p] of Object.entries(db.prescriptions || {})){
+          (p.history || []).forEach(h => rows.push({ prescId: pid, drugName: p.drugName, ...h }));
+        }
+        rows.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+        return rows.slice(0, limit);
+      }
+    };
+
+    /*****************************************************************
+     * APP UI + workflow
+     *****************************************************************/
+    const state = { user: null, prescriptions: [], todayReminders: [] };
+    const $ = (id) => document.getElementById(id);
+    const isoDate = (d) => d.toISOString().slice(0, 10);
+
+    // Theme toggle
+    function initTheme(){
+      const savedTheme = localStorage.getItem('meditrack_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+    }
+
+    function updateThemeIcon(theme){
+      const icon = $('themeIcon');
+      icon.innerHTML = theme === 'light' 
+        ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />`
+        : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />`;
+    }
+
+    $('themeToggle').addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('meditrack_theme', newTheme);
+      updateThemeIcon(newTheme);
+    });
+
+    // Dynamic greeting
+    function updateGreeting(){
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+      $('timeGreeting').textContent = greeting;
+    }
+
+    // Wire UI events
+    $('loginBtn').addEventListener('click', () => switchToSignIn());
+    $('switchToSignUp').addEventListener('click', () => switchToSignUp());
+    $('signInBtn').addEventListener('click', onAuthButtonClicked);
+    $('logoutBtn').addEventListener('click', async () => await Data.signOut());
+    $('openAdd').addEventListener('click', () => openModal());
+    $('closeModal').addEventListener('click', () => closeModal());
+    $('savePresc').addEventListener('click', () => savePrescription());
+    $('m-freq').addEventListener('change', handleFreqChange);
+    $('viewHistory').addEventListener('click', (e) => { e.preventDefault(); openHistory(); });
+    $('backToDash').addEventListener('click', () => { $('historyPage').style.display = 'none'; $('dashboard').style.display = 'block'; });
+    $('applyFilter').addEventListener('click', () => populateHistoryTable());
+
+    function switchToSignIn(){
+      $('authTitle').textContent = 'Log In to MediTrack';
+      $('signInBtn').textContent = 'Log In';
+      $('switchToSignUp').textContent = 'Create Account';
+      $('switchToSignUp').classList.remove('hidden');
+      $('loginBtn').classList.add('hidden');
+    }
+
+    function switchToSignUp(){
+      $('authTitle').textContent = 'Create an Account';
+      $('signInBtn').textContent = 'Sign Up';
+      $('switchToSignUp').textContent = 'Log In';
+      $('switchToSignUp').classList.remove('hidden');
+      $('loginBtn').classList.add('hidden');
+    }
+
+    async function onAuthButtonClicked(){
+      const email = $('email').value.trim();
+      const pw = $('password').value.trim();
+      $('authMsg').textContent = '';
+      try {
+        if($('signInBtn').textContent.includes('Up')){
+          await Data.signUp(email, pw);
+          $('authMsg').textContent = 'Account created successfully.';
+        } else {
+          await Data.signIn(email, pw);
+          $('authMsg').textContent = 'Logged in successfully.';
+        }
+      } catch(err) {
+        console.error('Auth error:', err);
+        $('authMsg').textContent = err.message || 'Authentication failed.';
+      }
+    }
+
+    // Initialize app
+    (async function boot(){
+      initTheme();
+      updateGreeting();
+      await Data.init();
+      Data.onAuthStateChanged(async user => {
+        state.user = user;
+        if(user){
+          $('authScreen').classList.add('hidden');
+          $('dashboard').classList.remove('hidden');
+          $('logoutBtn').classList.remove('hidden');
+          $('user-email').textContent = user.email || '';
+          $('greetName').textContent = (user.email || 'you').split('@')[0];
+          await loadData();
+        } else {
+          $('authScreen').classList.remove('hidden');
+          $('dashboard').classList.add('hidden');
+          $('historyPage').classList.add('hidden');
+          $('logoutBtn').classList.add('hidden');
+          $('user-email').textContent = '';
+          switchToSignIn();
+        }
+      });
+      // Seed helper for demo
+      window._seedDemo = async function(){
+        if(!state.user) return alert('Log in first');
+        const uid = state.user.uid;
+        await Data.addPrescription(uid, {
+          drugName: 'Amoxicillin',
+          dosage: '500mg',
+          times: ['08:00', '14:00', '20:00'],
+          startDate: isoDate(new Date()),
+          endDate: isoDate(new Date(new Date().setDate(new Date().getDate() + 6))),
+          notes: 'With food'
+        });
+        await Data.addPrescription(uid, {
+          drugName: 'Vitamin D',
+          dosage: '1000 IU',
+          times: ['09:00'],
+          startDate: isoDate(new Date()),
+          endDate: isoDate(new Date(new Date().setDate(new Date().getDate() + 30))),
+          notes: ''
+        });
+        await loadData();
+        alert('Demo data created');
+      };
+    })();
+
+    /*****************************************************************
+     * Data-driven UI functions
+     *****************************************************************/
+    async function loadData(){
+      if(!state.user) return;
+      const uid = state.user.uid;
+      state.prescriptions = await Data.getPrescriptions(uid);
+      renderPrescriptions();
+      buildTodayReminders();
+      renderHistoryPreview();
+      populateFilter();
+    }
+
+    function renderPrescriptions(){
+      const container = $('prescriptions');
+      container.innerHTML = '';
+      if(!state.prescriptions.length){
+        container.innerHTML = '<div class="text-[var(--muted)]">No prescriptions. Add one.</div>';
+        return;
+      }
+      state.prescriptions.forEach(p => {
+        const el = document.createElement('div');
+        el.className = 'flex justify-between items-center p-3 bg-gradient-to-b from-[var(--card)] to-[var(--card)]/90 rounded-lg shadow-sm hover:shadow-md hover:-translate-y-1 transition-all';
+        el.innerHTML = `
+          <div>
+            <div class="font-semibold">${escapeHtml(p.drugName)} <span class="text-[var(--muted)] text-sm">${escapeHtml(p.dosage || '')}</span></div>
+            <div class="text-[var(--muted)] text-xs">${(p.times || []).join(', ')} • ${p.startDate || '—'} → ${p.endDate || '—'}</div>
+          </div>
+          <div class="flex gap-2">
+            <button class="bg-transparent border border-[var(--accent)]/20 text-[var(--accent)] px-2 py-1 rounded-lg hover:bg-[var(--accent)] hover:text-white transition-all animate-slideIn" data-id="${p.id}" data-act="edit">Edit</button>
+            <button class="bg-[var(--accent)] text-white px-2 py-1 rounded-lg hover:bg-[var(--accent)]/80 transition-all animate-slideIn" data-id="${p.id}" data-act="delete">Delete</button>
+          </div>`;
+        container.appendChild(el);
+      });
+      container.querySelectorAll('button[data-act]').forEach(btn => btn.addEventListener('click', async (e) => {
+        const id = btn.getAttribute('data-id');
+        const act = btn.getAttribute('data-act');
+        if(act === 'delete'){
+          if(!confirm('Delete this prescription?')) return;
+          await Data.deletePrescription(state.user.uid, id);
+          await loadData();
+        } else if(act === 'edit'){
+          const pres = state.prescriptions.find(p => p.id === id);
+          openModal(id, pres);
+        }
+      }));
+    }
+
+    function buildTodayReminders(){
+      state.todayReminders = [];
+      const today = isoDate(new Date());
+      state.prescriptions.forEach(p => {
+        if(!p.startDate || !p.endDate) return;
+        if(p.startDate <= today && today <= p.endDate){
+          (p.times || []).forEach(t => state.todayReminders.push({ prescId: p.id, drugName: p.drugName, dosage: p.dosage, time: t, startDate: p.startDate, endDate: p.endDate }));
+        }
+      });
+      state.todayReminders.sort((a, b) => a.time.localeCompare(b.time));
+      renderTimeline();
+      updateProgress();
+      updateReminderBadge();
+    }
+
+    async function renderTimeline(){
+      const root = $('timeline');
+      root.innerHTML = '';
+      if(!state.user) return;
+      for(const item of state.todayReminders){
+        let status = 'pending';
+        const hist = await Data.getHistoryForPrescription(state.user.uid, item.prescId);
+        const today = isoDate(new Date());
+        if(hist.some(h => h.date === today && h.time === item.time && h.status === 'taken')) status = 'taken';
+        const div = document.createElement('div');
+        div.className = `flex gap-3 items-center p-3 rounded-lg border-l-4 ${status === 'taken' ? 'border-[var(--success)] bg-[var(--success)]/5' : 'border-[var(--accent)]/20'} transition-all`;
+        div.innerHTML = `
+          <div class="w-16 text-center font-semibold">${item.time}</div>
+          <div class="flex-1">
+            <div class="font-semibold">${escapeHtml(item.drugName)} <span class="text-[var(--muted)]">${escapeHtml(item.dosage || '')}</span></div>
+            <div class="text-[var(--muted)] text-xs">${item.startDate} → ${item.endDate}</div>
+          </div>
+          <div>
+            ${status === 'taken' 
+              ? `<button class="bg-transparent border border-[var(--accent)]/20 text-[var(--accent)] px-2 py-1 rounded-lg hover:bg-[var(--accent)] hover:text-white transition-all animate-slideIn" data-action="undo" data-p="${item.prescId}" data-time="${item.time}">Undo</button>` 
+              : `<button class="bg-[var(--accent)] text-white px-2 py-1 rounded-lg hover:bg-[var(--accent)]/80 transition-all animate-slideIn" data-action="take" data-p="${item.prescId}" data-time="${item.time}">Mark as Taken</button>`}
+          </div>`;
+        root.appendChild(div);
+      }
+      root.querySelectorAll('button[data-action]').forEach(btn => btn.addEventListener('click', async (e) => {
+        const act = btn.getAttribute('data-action');
+        const pid = btn.getAttribute('data-p');
+        const time = btn.getAttribute('data-time');
+        if(act === 'take'){
+          await markAsTaken(pid, time);
+        } else if(act === 'undo'){
+          await undoTaken(pid, time);
+        }
+        await loadData();
+      }));
+    }
+
+    function triggerConfetti(){
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ['#34d399', '#06b6d4', '#2563eb']
+      });
+    }
+
+    async function updateProgress(){
+      const total = state.todayReminders.length || 1;
+      const date = isoDate(new Date());
+      let taken = 0;
+      for(const r of state.todayReminders){
+        const hist = await Data.getHistoryForPrescription(state.user.uid, r.prescId);
+        if(hist.some(h => h.date === date && h.time === r.time && h.status === 'taken')) taken++;
+      }
+      const pct = Math.round((taken / total) * 100);
+      $('progressBar').style.width = pct + '%';
+    }
+
+    function updateReminderBadge(){
+      const badge = $('reminderBadge');
+      const pending = state.todayReminders.filter(r => {
+        const hist = Data._storage(state.user.uid).prescriptions[r.prescId]?.history || [];
+        const today = isoDate(new Date());
+        return !hist.some(h => h.date === today && h.time === r.time && h.status === 'taken');
+      }).length;
+      if(pending > 0){
+        badge.textContent = pending;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    async function renderHistoryPreview(){
+      const root = $('recentHistory');
+      root.innerHTML = '';
+      if(!state.user) return;
+      const rows = await Data.getRecentHistory(state.user.uid, 10);
+      const ul = document.createElement('div');
+      ul.className = 'flex flex-col gap-2';
+      rows.slice(0, 6).forEach(r => {
+        const d = document.createElement('div');
+        d.className = 'flex justify-between items-center p-3 bg-gradient-to-b from-[var(--card)] to-[var(--card)]/90 rounded-lg shadow-sm hover:shadow-md hover:-translate-y-1 transition-all';
+        d.innerHTML = `
+          <div>
+            <div class="font-semibold">${escapeHtml(r.drugName || r.drug)} <span class="text-[var(--muted)] text-sm">${escapeHtml(r.time || '')}</span></div>
+            <div class="text-[var(--muted)] text-xs">${r.date || ''} — ${r.status || ''}</div>
+          </div>`;
+        ul.appendChild(d);
+      });
+      root.appendChild(ul);
+    }
+
+    /*****************************************************************
+     * MODAL & CRUD
+     *****************************************************************/
+    function openModal(id = null, data = null){
+      $('modalRoot').classList.remove('hidden');
+      setTimeout(() => $('modalRoot').firstElementChild.classList.add('animate-slideIn'), 10);
+      $('modalRoot').setAttribute('aria-hidden', 'false');
+      $('m-drug').value = data?.drugName || '';
+      $('m-dosage').value = data?.dosage || '';
+      $('m-start').value = data?.startDate || isoDate(new Date());
+      $('m-end').value = data?.endDate || isoDate(new Date());
+      $('m-notes').value = data?.notes || '';
+      $('timesContainer').innerHTML = '';
+      const times = data?.times || ['08:00'];
+      times.forEach(t => addTimeInput(t));
+      $('savePresc').setAttribute('data-edit-id', id || '');
+    }
+
+    function closeModal(){
+      $('modalRoot').firstElementChild.classList.remove('animate-slideIn');
+      setTimeout(() => $('modalRoot').classList.add('hidden'), 300);
+      $('modalRoot').setAttribute('aria-hidden', 'true');
+    }
+
+    function addTimeInput(val = '08:00'){
+      const wrapper = document.createElement('div');
+      wrapper.className = 'flex items-center gap-2';
+      const input = document.createElement('input');
+      input.type = 'time';
+      input.value = val;
+      input.className = 'p-2 border border-[var(--border)] rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]';
+      const del = document.createElement('button');
+      del.className = 'bg-transparent border border-[var(--accent)]/20 text-[var(--accent)] px-2 py-1 rounded-lg hover:bg-[var(--accent)] hover:text-white transition-all animate-slideIn';
+      del.textContent = '×';
+      del.title = 'Remove time';
+      del.addEventListener('click', () => wrapper.remove());
+      wrapper.appendChild(input);
+      wrapper.appendChild(del);
+      $('timesContainer').appendChild(wrapper);
+    }
+
+    addTimeInput('08:00');
+
+    function handleFreqChange(){
+      const f = $('m-freq').value;
+      if(f === 'once'){
+        $('timesContainer').innerHTML = '';
+        addTimeInput('08:00');
+      } else if(f === 'twice'){
+        $('timesContainer').innerHTML = '';
+        addTimeInput('08:00');
+        addTimeInput('20:00');
+      }
+    }
+
+    async function savePrescription(){
+      const id = $('savePresc').getAttribute('data-edit-id');
+      const drug = $('m-drug').value.trim();
+      const dosage = $('m-dosage').value.trim();
+      const start = $('m-start').value;
+      const end = $('m-end').value;
+      if(!drug){
+        alert('Enter drug name');
+        return;
+      }
+      if(!start || !end){
+        alert('Please select start and end dates');
+        return;
+      }
+      if(end < start){
+        alert('End date must be after start date');
+        return;
+      }
+      const times = Array.from($('timesContainer').querySelectorAll('input[type=time]')).map(i => i.value).filter(Boolean);
+      if(times.length === 0){
+        alert('Add at least one time');
+        return;
+      }
+      const payload = { drugName: drug, dosage, times, startDate: start, endDate: end, notes: $('m-notes').value || '' };
+      try{
+        if(id){
+          await Data.updatePrescription(state.user.uid, id, payload);
+        } else {
+          await Data.addPrescription(state.user.uid, payload);
+        }
+        closeModal();
+        await loadData();
+      } catch(err){
+        console.error(err);
+        alert('Save failed: ' + err.message);
+      }
+    }
+
+    /*****************************************************************
+     * MARK AS TAKEN / HISTORY
+     *****************************************************************/
+    async function markAsTaken(prescId, time){
+      const payload = { date: isoDate(new Date()), time, status: 'taken' };
+      await Data.addHistoryEntry(state.user.uid, prescId, payload);
+      triggerConfetti();
+      await updateProgress();
+      await updateReminderBadge();
+    }
+
+    async function undoTaken(prescId, time){
+      const db = Data._storage(state.user.uid);
+      if(!db.prescriptions[prescId]) return;
+      const date = isoDate(new Date());
+      db.prescriptions[prescId].history = db.prescriptions[prescId].history.filter(h => !(h.date === date && h.time === time && h.status === 'taken'));
+      Data._save(state.user.uid, db);
+      await loadData();
+    }
+
+    async function populateFilter(){
+      const sel = $('filterDrug');
+      sel.innerHTML = '<option value="">All</option>';
+      state.prescriptions.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.drugName;
+        opt.textContent = p.drugName;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function populateHistoryTable(){
+      const tbody = $('historyTable');
+      tbody.innerHTML = '';
+      const uid = state.user.uid;
+      const from = $('fromDate').value;
+      const to = $('toDate').value;
+      const drug = $('filterDrug').value;
+      const pres = await Data.getPrescriptions(uid);
+      const rows = [];
+      for(const p of pres){
+        if(drug && p.drugName !== drug) continue;
+        const hist = await Data.getHistoryForPrescription(uid, p.id);
+        hist.forEach(h => {
+          if(from && h.date < from) return;
+          if(to && h.date > to) return;
+          rows.push({ date: h.date, time: h.time, drug: p.drugName, status: h.status || 'taken' });
+        });
+      }
+      rows.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(b.time));
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'animate-fadeIn';
+        tr.innerHTML = `<td class="p-2">${r.date}</td><td class="p-2">${r.time}</td><td class="p-2">${escapeHtml(r.drug)}</td><td class="p-2">${r.status}</td><td class="p-2"></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function openHistory(){
+      $('dashboard').classList.add('hidden');
+      $('historyPage').classList.remove('hidden');
+      await populateHistoryTable();
+    }
+
+    /*****************************************************************
+     * HELPERS
+     *****************************************************************/
+    function escapeHtml(s){
+      if(!s) return '';
+      return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    }
+  </script>
+
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 text-[var(--muted)] text-sm">
+    <p>This app runs in local demo mode using localStorage. Log in or create an account, then run <code>_seedDemo()</code> in your browser console to add sample prescriptions for testing.</p>
+  </div>
+</body>
+</html>

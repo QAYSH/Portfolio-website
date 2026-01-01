@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors - Toggle Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .choice-btn {
+            transition: all 0.2s ease;
+            transform: scale(1);
+        }
+        
+        .choice-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .choice-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .computer-choice {
+            animation: computerThinking 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes computerThinking {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        
+        .result-text {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .mode-toggle {
+            transition: all 0.3s ease;
+        }
+        
+        .mode-toggle.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+        <!-- Game Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-hand-scissors mr-2 text-blue-500"></i>
+                Rock Paper Scissors
+            </h1>
+            
+            <!-- Mode Toggle -->
+            <div class="flex bg-gray-200 rounded-full p-1">
+                <button id="classic-mode" class="mode-toggle px-3 py-1 rounded-full text-sm font-medium active">
+                    Classic
+                </button>
+                <button id="extended-mode" class="mode-toggle px-3 py-1 rounded-full text-sm font-medium">
+                    Extended
+                </button>
+            </div>
+        </div>
+        
+        <!-- Score Display -->
+        <div class="flex justify-between items-center mb-8">
+            <div class="text-center">
+                <p class="text-gray-600">You</p>
+                <p id="player-score" class="text-3xl font-bold">0</p>
+            </div>
+            <div class="text-center">
+                <p class="text-gray-600">Computer</p>
+                <p id="computer-score" class="text-3xl font-bold">0</p>
+            </div>
+        </div>
+        
+        <!-- Choices Display -->
+        <div class="flex justify-center mb-8">
+            <div class="text-center mr-8">
+                <div id="player-choice" class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
+                    <i class="fas fa-question text-blue-500"></i>
+                </div>
+                <p class="text-gray-600 mt-2">Your choice</p>
+            </div>
+            <div class="text-center">
+                <div id="computer-choice" class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-2xl">
+                    <i class="fas fa-question text-red-500"></i>
+                </div>
+                <p class="text-gray-600 mt-2">Computer</p>
+            </div>
+        </div>
+        
+        <!-- Result Display -->
+        <div id="result-display" class="text-center mb-8 h-8">
+            <!-- Result text will appear here -->
+        </div>
+        
+        <!-- Classic Mode Choices -->
+        <div id="classic-choices" class="grid grid-cols-3 gap-3 mb-4">
+            <button class="choice-btn rock-btn bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full text-xl">
+                <i class="fas fa-hand-rock"></i>
+            </button>
+            <button class="choice-btn paper-btn bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full text-xl">
+                <i class="fas fa-hand-paper"></i>
+            </button>
+            <button class="choice-btn scissors-btn bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full text-xl">
+                <i class="fas fa-hand-scissors"></i>
+            </button>
+        </div>
+        
+        <!-- Extended Mode Choices (hidden by default) -->
+        <div id="extended-choices" class="grid grid-cols-3 gap-3 mb-4 hidden">
+            <button class="choice-btn rock-btn bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-full text-xl">
+                <i class="fas fa-hand-rock"></i>
+            </button>
+            <button class="choice-btn paper-btn bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-full text-xl">
+                <i class="fas fa-hand-paper"></i>
+            </button>
+            <button class="choice-btn scissors-btn bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-full text-xl">
+                <i class="fas fa-hand-scissors"></i>
+            </button>
+            <button class="choice-btn lizard-btn bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-full text-xl">
+                <i class="fas fa-hand-lizard"></i>
+            </button>
+            <button class="choice-btn spock-btn bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-full text-xl">
+                <i class="fas fa-hand-spock"></i>
+            </button>
+        </div>
+        
+        <!-- Game Controls -->
+        <div class="flex justify-center space-x-4">
+            <button id="reset-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-full font-medium">
+                <i class="fas fa-redo mr-2"></i> Reset
+            </button>
+            <button id="how-to-play-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-full font-medium">
+                <i class="fas fa-question-circle mr-2"></i> How to Play
+            </button>
+        </div>
+    </div>
+    
+    <!-- How to Play Modal -->
+    <div id="how-to-play-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">How to Play</h2>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="classic-instructions">
+                <h3 class="font-medium mb-2">Classic Mode:</h3>
+                <ul class="list-disc pl-5 mb-4 space-y-1">
+                    <li>Rock crushes Scissors</li>
+                    <li>Scissors cuts Paper</li>
+                    <li>Paper covers Rock</li>
+                </ul>
+            </div>
+            
+            <div id="extended-instructions" class="hidden">
+                <h3 class="font-medium mb-2">Extended Mode (Rock Paper Scissors Lizard Spock):</h3>
+                <ul class="list-disc pl-5 mb-4 space-y-1">
+                    <li>Scissors cuts Paper</li>
+                    <li>Paper covers Rock</li>
+                    <li>Rock crushes Lizard</li>
+                    <li>Lizard poisons Spock</li>
+                    <li>Spock smashes Scissors</li>
+                    <li>Scissors decapitates Lizard</li>
+                    <li>Lizard eats Paper</li>
+                    <li>Paper disproves Spock</li>
+                    <li>Spock vaporizes Rock</li>
+                    <li>Rock crushes Scissors</li>
+                </ul>
+            </div>
+            
+            <p class="text-sm text-gray-600">Choose your move and see if you can beat the computer!</p>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            playerScore: 0,
+            computerScore: 0,
+            isExtendedMode: false,
+            choices: {
+                classic: ['rock', 'paper', 'scissors'],
+                extended: ['rock', 'paper', 'scissors', 'lizard', 'spock']
+            },
+            rules: {
+                classic: {
+                    rock: { beats: ['scissors'], message: 'Rock crushes Scissors' },
+                    paper: { beats: ['rock'], message: 'Paper covers Rock' },
+                    scissors: { beats: ['paper'], message: 'Scissors cut Paper' }
+                },
+                extended: {
+                    rock: { beats: ['scissors', 'lizard'], message: 'Rock crushes Scissors and crushes Lizard' },
+                    paper: { beats: ['rock', 'spock'], message: 'Paper covers Rock and disproves Spock' },
+                    scissors: { beats: ['paper', 'lizard'], message: 'Scissors cut Paper and decapitate Lizard' },
+                    lizard: { beats: ['paper', 'spock'], message: 'Lizard eats Paper and poisons Spock' },
+                    spock: { beats: ['rock', 'scissors'], message: 'Spock vaporizes Rock and smashes Scissors' }
+                }
+            }
+        };
+
+        // DOM Elements
+        const playerScoreElement = document.getElementById('player-score');
+        const computerScoreElement = document.getElementById('computer-score');
+        const playerChoiceElement = document.getElementById('player-choice');
+        const computerChoiceElement = document.getElementById('computer-choice');
+        const resultDisplay = document.getElementById('result-display');
+        const classicChoices = document.getElementById('classic-choices');
+        const extendedChoices = document.getElementById('extended-choices');
+        const classicModeBtn = document.getElementById('classic-mode');
+        const extendedModeBtn = document.getElementById('extended-mode');
+        const resetBtn = document.getElementById('reset-btn');
+        const howToPlayBtn = document.getElementById('how-to-play-btn');
+        const howToPlayModal = document.getElementById('how-to-play-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const classicInstructions = document.getElementById('classic-instructions');
+        const extendedInstructions = document.getElementById('extended-instructions');
+
+        // Initialize the game
+        function initGame() {
+            // Set up event listeners
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.addEventListener('click', handlePlayerChoice);
+            });
+            
+            classicModeBtn.addEventListener('click', () => toggleGameMode(false));
+            extendedModeBtn.addEventListener('click', () => toggleGameMode(true));
+            resetBtn.addEventListener('click', resetGame);
+            howToPlayBtn.addEventListener('click', showHowToPlay);
+            closeModalBtn.addEventListener('click', hideHowToPlay);
+            
+            // Close modal when clicking outside
+            howToPlayModal.addEventListener('click', (e) => {
+                if (e.target === howToPlayModal) {
+                    hideHowToPlay();
+                }
+            });
+            
+            // Update UI based on initial mode
+            toggleGameMode(gameState.isExtendedMode);
+        }
+
+        // Handle player's choice
+        function handlePlayerChoice(e) {
+            // Determine which choice was made based on the button clicked
+            let choice;
+            if (e.target.classList.contains('choice-btn')) {
+                // Button was clicked directly
+                choice = e.target.querySelector('i').className.match(/fa-hand-(\w+)/)[1];
+            } else if (e.target.tagName === 'I') {
+                // Icon inside button was clicked
+                choice = e.target.className.match(/fa-hand-(\w+)/)[1];
+            } else {
+                return;
+            }
+            
+            // Update player's choice display
+            updateChoiceDisplay(playerChoiceElement, choice);
+            
+            // Disable choice buttons during computer's turn
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+            });
+            
+            // Show computer is thinking
+            computerChoiceElement.innerHTML = '<i class="fas fa-cog fa-spin text-red-500"></i>';
+            computerChoiceElement.classList.add('computer-choice');
+            
+            // After a short delay, make computer's choice
+            setTimeout(() => {
+                const computerChoice = makeComputerChoice();
+                updateChoiceDisplay(computerChoiceElement, computerChoice);
+                computerChoiceElement.classList.remove('computer-choice');
+                
+                // Determine the winner
+                const result = determineWinner(choice, computerChoice);
+                displayResult(result, choice, computerChoice);
+                
+                // Re-enable choice buttons
+                document.querySelectorAll('.choice-btn').forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50');
+                });
+            }, 1000);
+        }
+
+        // Update choice display
+        function updateChoiceDisplay(element, choice) {
+            element.innerHTML = `<i class="fas fa-hand-${choice} ${element === playerChoiceElement ? 'text-blue-500' : 'text-red-500'}"></i>`;
+        }
+
+        // Make computer's choice
+        function makeComputerChoice() {
+            const choices = gameState.isExtendedMode ? gameState.choices.extended : gameState.choices.classic;
+            const randomIndex = Math.floor(Math.random() * choices.length);
+            return choices[randomIndex];
+        }
+
+        // Determine the winner
+        function determineWinner(playerChoice, computerChoice) {
+            if (playerChoice === computerChoice) {
+                return 'draw';
+            }
+            
+            const rules = gameState.isExtendedMode ? gameState.rules.extended : gameState.rules.classic;
+            
+            if (rules[playerChoice].beats.includes(computerChoice)) {
+                return 'player';
+            } else {
+                return 'computer';
+            }
+        }
+
+        // Display the result
+        function displayResult(result, playerChoice, computerChoice) {
+            let resultText = '';
+            let resultColor = '';
+            
+            const rules = gameState.isExtendedMode ? gameState.rules.extended : gameState.rules.classic;
+            
+            switch (result) {
+                case 'player':
+                    gameState.playerScore++;
+                    resultText = `You win! ${rules[playerChoice].message}`;
+                    resultColor = 'text-green-500';
+                    break;
+                case 'computer':
+                    gameState.computerScore++;
+                    resultText = `Computer wins! ${rules[computerChoice].message}`;
+                    resultColor = 'text-red-500';
+                    break;
+                case 'draw':
+                    resultText = "It's a draw!";
+                    resultColor = 'text-gray-500';
+                    break;
+            }
+            
+            // Update scores
+            playerScoreElement.textContent = gameState.playerScore;
+            computerScoreElement.textContent = gameState.computerScore;
+            
+            // Display result
+            resultDisplay.innerHTML = `<p class="${resultColor} font-medium result-text">${resultText}</p>`;
+        }
+
+        // Toggle between classic and extended mode
+        function toggleGameMode(isExtended) {
+            gameState.isExtendedMode = isExtended;
+            
+            if (isExtended) {
+                classicChoices.classList.add('hidden');
+                extendedChoices.classList.remove('hidden');
+                classicModeBtn.classList.remove('active');
+                extendedModeBtn.classList.add('active');
+                classicInstructions.classList.add('hidden');
+                extendedInstructions.classList.remove('hidden');
+            } else {
+                classicChoices.classList.remove('hidden');
+                extendedChoices.classList.add('hidden');
+                classicModeBtn.classList.add('active');
+                extendedModeBtn.classList.remove('active');
+                classicInstructions.classList.remove('hidden');
+                extendedInstructions.classList.add('hidden');
+            }
+            
+            // Reset choices display when changing modes
+            playerChoiceElement.innerHTML = '<i class="fas fa-question text-blue-500"></i>';
+            computerChoiceElement.innerHTML = '<i class="fas fa-question text-red-500"></i>';
+            resultDisplay.innerHTML = '';
+        }
+
+        // Reset the game
+        function resetGame() {
+            gameState.playerScore = 0;
+            gameState.computerScore = 0;
+            playerScoreElement.textContent = '0';
+            computerScoreElement.textContent = '0';
+            playerChoiceElement.innerHTML = '<i class="fas fa-question text-blue-500"></i>';
+            computerChoiceElement.innerHTML = '<i class="fas fa-question text-red-500"></i>';
+            resultDisplay.innerHTML = '';
+            
+            // Re-enable buttons if they were disabled
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            });
+            
+            computerChoiceElement.classList.remove('computer-choice');
+        }
+
+        // Show how to play modal
+        function showHowToPlay() {
+            howToPlayModal.classList.remove('hidden');
+        }
+
+        // Hide how to play modal
+        function hideHowToPlay() {
+            howToPlayModal.classList.add('hidden');
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>

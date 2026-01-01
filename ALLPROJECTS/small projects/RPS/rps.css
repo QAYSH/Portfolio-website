@@ -1,0 +1,40 @@
+
+.choice-btn {
+            transition: all 0.2s ease;
+            transform: scale(1);
+        }
+        
+        .choice-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .choice-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .computer-choice {
+            animation: computerThinking 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes computerThinking {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        
+        .result-text {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .mode-toggle {
+            transition: all 0.3s ease;
+        }
+        
+        .mode-toggle.active {
+            background-color: #3b82f6;
+            color: white;
+        }
