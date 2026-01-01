@@ -1090,3 +1090,120 @@
             if (isDark) {
                 document.documentElement.classList.add('dark');
                 localStorage.setItem('darkMode', 'enabled');
+                if (toggleCircle) toggleCircle.style.transform = 'translateX(28px)';
+                if (mobileToggleCircle) mobileToggleCircle.style.transform = 'translateX(22px)';
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('darkMode', 'disabled');
+                if (toggleCircle) toggleCircle.style.transform = 'translateX(0)';
+                if (mobileToggleCircle) mobileToggleCircle.style.transform = 'translateX(0)';
+            }
+        }
+
+        // Initialize dark mode
+        const savedMode = localStorage.getItem('darkMode');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialDarkMode = savedMode === 'enabled' || (!savedMode && prefersDark);
+        
+        if (initialDarkMode) {
+            toggleDarkMode(true);
+        } else {
+            toggleDarkMode(false);
+        }
+
+        // Dark mode toggle event listeners
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                toggleDarkMode(!isDark);
+            });
+        }
+
+        if (mobileDarkModeToggle) {
+            mobileDarkModeToggle.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                toggleDarkMode(!isDark);
+            });
+        }
+
+        // Back to Top Button
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.classList.remove('opacity-0', 'scale-0');
+                backToTop.classList.add('opacity-100', 'scale-100');
+            } else {
+                backToTop.classList.remove('opacity-100', 'scale-100');
+                backToTop.classList.add('opacity-0', 'scale-0');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Contact Form Submission
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const formData = {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    subject: document.getElementById('subject').value,
+                    message: document.getElementById('message').value
+                };
+                
+                // Here you would typically send the data to a server
+                // For now, just show a success message
+                alert('Thank you for your message! I\'ll get back to you soon.');
+                contactForm.reset();
+            });
+        }
+
+        // Set current year in footer
+        if (currentYear) {
+            currentYear.textContent = new Date().getFullYear();
+        }
+
+        // Animate skill bars when in view
+        const skillBars = document.querySelectorAll('.skill-bar-animation');
+        const skillBarObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const bar = entry.target;
+                    const width = bar.style.width || '0%';
+                    bar.style.width = '0%';
+                    
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                    
+                    skillBarObserver.unobserve(bar);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        skillBars.forEach(bar => skillBarObserver.observe(bar));
+    </script>
+</body>
+</html>
