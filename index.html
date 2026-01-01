@@ -1356,3 +1356,35 @@
             toggleDarkMode(false);
         }
 
+        // Dark mode toggle event listeners
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                toggleDarkMode(!isDark);
+            });
+        }
+
+        if (mobileDarkModeToggle) {
+            mobileDarkModeToggle.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                toggleDarkMode(!isDark);
+            });
+        }
+
+        // Back to Top Button
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.classList.remove('opacity-0', 'scale-0');
+                backToTop.classList.add('opacity-100', 'scale-100');
+            } else {
+                backToTop.classList.remove('opacity-100', 'scale-100');
+                backToTop.classList.add('opacity-0', 'scale-0');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
