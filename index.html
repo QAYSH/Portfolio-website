@@ -1430,4 +1430,33 @@
             currentYear.textContent = new Date().getFullYear();
         }
 
-       
+        // Animate skill bars when in view
+        const skillBars = document.querySelectorAll('.skill-bar-animation');
+        const skillBarObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const bar = entry.target;
+                    const width = bar.style.width || '0%';
+                    bar.style.width = '0%';
+                    
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                    
+                    skillBarObserver.unobserve(bar);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        skillBars.forEach(bar => skillBarObserver.observe(bar));
+
+        // Initialize typewriter effect
+        const typewriter = document.querySelector('.typewriter');
+        if (typewriter) {
+            setTimeout(() => {
+                typewriter.style.borderRightColor = 'transparent';
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
